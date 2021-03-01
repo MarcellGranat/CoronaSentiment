@@ -81,8 +81,17 @@ theme_set(theme_grey() + theme(
 
 
 ```{r}
+# Data ----------------------------------------------------------------------------------
+
+# Articles ==============================================================================
+
 load("dat.RData")
+# This RData contains the articles after the main cleaning process
+# To ensure full reproducibility see the attached files at the corresponding
+# GitHub Repo: -> https://github.com/MarcellGranat/CoronaSentiment <-
+
 Hungary_rawtext <- readxl::read_excel("scrapping raw csv/Hungary_rawtext.xlsx") %>% 
+  # Hungarian articles before translation
   select(date, title, URL = links, text) %>% 
   mutate_all(function(x) str_remove_all(x, "\r")) %>% 
   mutate_all(function(x) str_remove_all(x, "\t")) %>% 
@@ -99,10 +108,9 @@ Hungary_rawtext <- readxl::read_excel("scrapping raw csv/Hungary_rawtext.xlsx") 
 
 ```
 
-# Adatok
-
-
 ```{r}
+### Add sentiment values to our data ####################################################
+
 dat_sentiment <- dat %>% 
   select(date, text, country) %>% 
   mutate(country = ifelse(str_detect(country, "BE"), "BE", country)) %>% 
@@ -130,78 +138,131 @@ dat_sentiment_monthly <- dat_sentiment %>%
 
 ```
 
-## Gépi fordítás
+```{r}
+# COVID data ============================================================================
 
-```{r fig.cap="Leggyakrabban előforduló szavak a magyar nylevű cikkekben a fordítást megelőzően és azt követően.", fig.height=8}
-st_hu <- c(stopwords::stopwords('hungarian'), "is", "ha", "hozzá") %>% 
-  {ifelse(str_starts(., "új"), NA, .)} %>% 
-  na.omit()
+dat_covid <- 
+  readr::read_csv("https://covid.ourworldindata.org/data/owid-covid-data.csv") %>% 
+  transmute(code = countrycode::countrycode(iso_code, origin = 'iso3c', 
+                                            destination = 'iso2c'),
+            date, 
+            cases = new_cases_per_million/1000,
+            death = new_deaths_per_million/1000
+  )
 
-ggpubr::ggarrange(
-Hungary_rawtext %>% 
-  filter(!str_detect(words, '\\d')) %>% 
-  anti_join(data.frame(words = st_hu)) %>% 
-  count(words, sort = T) %>% 
-  arrange(desc(n)) %>% 
-  head(30) %>% 
+dat_covid_monthly <- dat_covid %>% 
   mutate(
-     words = fct_reorder(words, n)
+    date = lubridate::ym(paste0(lubridate::year(date), '-', lubridate::month(date)))
   ) %>% 
-  ggplot() +
-  aes(n, words) + 
-  geom_vline(xintercept = 0) +
-  geom_col(color = 'black', fill = "gray70") +
-  labs(title = 'Magyarul', x = 'Előfordulási gyakoriság', y = NULL),
+  group_by(date, code) %>% 
+  summarise(cases = sum(cases, na.rm = T), death = sum(death, na.rm = T)) %>% 
+  ungroup()
 
-dat_sentiment %>% 
-  filter(country == 'HU') %>% 
-  filter(!str_detect(words, '\\d')) %>% 
-  anti_join(data.frame(words = c(stopwords::stopwords(), "also", "can", "new"))) %>% 
-  count(words, value, sort = T) %>%
-  arrange(desc(n)) %>%
-  head(30) %>% 
-  mutate(
-    value = case_when(
-      value < 0 ~ "Negatív",
-      value > 0 ~ "Pozitív", 
-      T ~ "Nincs"
-    ),
-    words = fct_reorder(words, n)
-  ) %>% 
-  ggplot() +
-  aes(n, words, fill = value) + 
-  geom_vline(xintercept = 0) +
-  geom_col(color = "black") +
-  labs(title = 'Fordítást követően', x = 'Előfordulási gyakoriság', y = NULL, 
-       fill = "Adott szó szentimentje") +
-  scale_fill_manual(values = c('red4', 'gray70', 'green')) + 
-  theme(
-    legend.position = 'bottom',
-    legend.direction = 'horizontal'
-  ), common.legend = T
-)
 ```
 
-
-
-
-
-
 ```{r}
+# Data from Eurostat ====================================================================
+
+dat_eco_sent <- eurostat::get_eurostat('ei_bssi_m_r2')
+# Economic sentiment indicator
+
+dat_unemployment <- eurostat::get_eurostat("une_rt_m") %>% 
+# unemployment
+  filter(age == "TOTAL", sex == "T", s_adj == "NSA", unit == "PC_ACT") %>% 
+  select(date = time, code = geo, unemployment = values) 
+```
+
+```{r grid}
+# Grid to facet_geo =====================================================================
+
 mygrid <- data.frame(
-  row = c(5, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6),
-  col = c(7, 1, 3, 4, 7, 7, 5, 4, 2, 3, 7, 2, 3, 5, 4, 4, 7, 6, 2, 5, 3, 6, 4, 5, 2, 4, 7, 1, 6),
-  code = c("BG", "IS", "NO", "FI", "EE", "LV", "SE", "DK", "UK", "NL", "LT", "BE", "DE", "PL", "CZ", "AT", "RO", "HU", "FR", "SK", "CH", "HR", "IT", "SI", "ES", "MT", "CY", "PT", "EL"),
-  name = c("Bulgária", "Izland", "Norvégia", "Finnország", "Észtország", "Lettország", "Svédország", "Dánia", "Egyesült Királyság", "Hollandia", "Litvánia", "Belgium", "Németország", "Lengyelország", "Csehország", "Ausztria", "Románia", "Magyarország", "Franciaország", "Szlovákia", "Svájc", "Horvátország", "Olaszország", "Szlovénia", "Spanyolország", "Málta", "Ciprus", "Portugália", "Görögország"),
+  row = c(5, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 6,
+          6, 6, 6),
+  col = c(7, 1, 3, 4, 7, 7, 5, 4, 2, 3, 7, 2, 3, 5, 4, 4, 7, 6, 2, 5, 3, 6, 4, 5, 2, 4
+          , 7, 1, 6),
+  code = c("BG", "IS", "NO", "FI", "EE", "LV", "SE", "DK", "UK", "NL", "LT", "BE", "DE",
+           "PL", "CZ", "AT", "RO", "HU", "FR", "SK", "CH", "HR", "IT", "SI", "ES", "MT",
+           "CY", "PT", "EL"),
+  name = c("Bulgária", "Izland", "Norvégia", "Finnország", "Észtország", "Lettország",
+           "Svédország", "Dánia", "Egyesült Királyság", "Hollandia", "Litvánia",
+           "Belgium", "Németország", "Lengyelország", "Csehország", "Ausztria",
+           "Románia", "Magyarország", "Franciaország", "Szlovákia", "Svájc",
+           "Horvátország", "Olaszország", "Szlovénia", "Spanyolország", "Málta", "Ciprus",
+           "Portugália", "Görögország"),
   stringsAsFactors = FALSE
 )
 
 ```
 
+# Adatok
+
+## Gépi fordítás
+
+```{r fig.cap="Leggyakrabban előforduló szavak a magyar nylevű cikkekben a fordítást megelőzően és azt követően.", fig.height=8}
+# Automatic translation =================================================================
+
+st_hu <- c(stopwords::stopwords('hungarian'), "is", "ha", "hozzá", "címlapfotó",
+           "illusztráció") %>% 
+  {ifelse(str_starts(., "új"), NA, .)} %>% 
+  na.omit()
+
+ggpubr::ggarrange(
+  Hungary_rawtext %>% 
+    filter(!str_detect(words, '\\d')) %>% 
+    anti_join(data.frame(words = st_hu)) %>% 
+    count(words, sort = T) %>% 
+    arrange(desc(n)) %>% 
+    head(30) %>% 
+    mutate(
+      words = fct_reorder(words, n)
+    ) %>% 
+    ggplot() +
+    aes(n, words) + 
+    geom_vline(xintercept = 0) +
+    geom_col(color = 'black', fill = "gray70") +
+    labs(title = 'Magyarul', x = 'Előfordulási gyakoriság', y = NULL),
+  
+  dat_sentiment %>% 
+    filter(country == 'HU') %>% 
+    filter(!str_detect(words, '\\d')) %>% 
+    anti_join(data.frame(words = c(stopwords::stopwords(), "also", "can"))) %>% 
+    count(words, value, sort = T) %>%
+    arrange(desc(n)) %>%
+    head(30) %>% 
+    mutate(
+      value = case_when(
+        value < 0 ~ "Negatív",
+        value > 0 ~ "Pozitív", 
+        T ~ "Nincs"
+      ),
+      words = fct_reorder(words, n)
+    ) %>% 
+    ggplot() +
+    aes(n, words, fill = value) + 
+    geom_vline(xintercept = 0) +
+    geom_col(color = "black") +
+    labs(title = 'Fordítást követően', x = 'Előfordulási gyakoriság', y = NULL, 
+         fill = "Adott szó szentimentje") +
+    scale_fill_manual(values = c('red4', 'gray70', 'green')) + 
+    theme(
+      legend.position = 'bottom',
+      legend.direction = 'horizontal'
+    ), common.legend = T
+)
+
+```
+
+
+
+# Leíró statisztikák
+
 ```{r fig.cap="A szentiment alakulása országonként", fig.height=10, fig.width=15, out.extra='angle=90'}
+# Explore the data ----------------------------------------------------------------------
+
 ggplot(dat_sentiment_daily, aes(date, value)) +
   geom_hline(yintercept = 0, color = "grey20") +
-  geom_line(size = 1) +
+  geom_line(size = .3, color = 'grey50') +
+  geom_smooth(size = 1.5, se = F) +
   facet_geo(~ code, grid = mygrid, label = 'name') +
   scale_x_date(limits = c(min(dat_sentiment_daily$date), max(dat_sentiment_daily$date)),
                breaks = c(min(dat_sentiment_daily$date), max(dat_sentiment_daily$date))) +
@@ -209,38 +270,7 @@ ggplot(dat_sentiment_daily, aes(date, value)) +
 
 ```
 
-```{r}
-covid_df <- readr::read_csv("https://covid.ourworldindata.org/data/owid-covid-data.csv")
-
-```
-
-```{r}
-covid_df %>% 
-  transmute(name = location, date, cases = new_cases_per_million*1000,
-            death = new_deaths_per_million*1000) %>% 
-  merge(dat) %>% 
-  select(name, date, cases, death, value) %>% 
-  pivot_longer(3:5, names_to = "var") %>% 
-  ggplot(aes(date, value)) +
-  geom_line() +
-  facet_grid(var ~ name, scales = "free_y")
-
-```
-
-```{r}
-unemployment <- eurostat::get_eurostat("une_rt_m") %>% 
-  filter(age == "TOTAL", sex == "T", s_adj == "NSA", unit == "PC_ACT") %>% 
-  select(geo, time, values) %>% 
-  mutate(
-    year = lubridate::year(time),
-    month = lubridate::month(time)
-  )
-
-```
-
-# Leíró statisztikák
-
-```{r}
+```{r fig.cap="Leggyakrabban előforduló pozitív és negatív szentimenttel rendelkező szavak"}
 library(reshape2)
 
 dat_sentiment %>% 
@@ -252,25 +282,39 @@ dat_sentiment %>%
   acast(words ~ sentiment, value.var = "n", fill = 0) %>%
   comparison.cloud(colors = c("red4", "cyan4"),
                    max.words = 100)
-  
-```
 
-
-```{r fig.cap="Havi szentiment alakulása országonként"}
-dat_sentiment_monthly %>% 
-  ggplot() +
-  geom_hline(yintercept = 0) +
-  geom_line(aes(date, value))  +
-  facet_wrap(~code)
-  
 ```
 
 ```{r}
+dat_plm <- dat_eco_sent %>% 
+  filter(indic == "BS-ESI-I") %>% 
+  select(date = time, code = geo, eco = values) %>% 
+  merge(dat_sentiment_monthly) %>% 
+  merge(dat_unemployment) %>% 
+  merge(dat_covid_monthly) %>% 
+  mutate(
+    t = lubridate::interval(lubridate::ymd('2020-01-01'), date),
+    t = lubridate::as.period(t) %/% months(1)
+  )
 
+```
+
+```{r}
+# Regression tree -----------------------------------------------------------------------
+
+m_tree <- rpart::rpart(data = dat_plm, formula = value ~ .-date-code-n,
+                       cp = .01)
+
+rattle::fancyRpartPlot(m_tree, palettes = 'PuRd', sub = NULL)
 ```
 
 
 
+
+\pagebreak
+\nocite{*}
+\bibliography{CoronaSentiment}
+\bibliographystyle{agsm}
 
 \pagebreak
 

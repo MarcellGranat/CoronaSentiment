@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.21 (MiKTeX 20.12) (preloaded format=pdflatex 2021.2.5)  1 MAR 2021 17:16
+This is pdfTeX, Version 3.14159265-2.6-1.40.21 (MiKTeX 20.12) (preloaded format=pdflatex 2021.2.5)  1 MAR 2021 21:32
 entering extended mode
 **./Granat_Mazzag_TDK2021.tex
 (Granat_Mazzag_TDK2021.tex
@@ -652,51 +652,38 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-0.80502pt}.
 
 [2]
-<Granat_Mazzag_TDK2021_files/figure-latex/unnamed-chunk-3-1.pdf, id=33, 469.755
+<Granat_Mazzag_TDK2021_files/figure-latex/unnamed-chunk-5-1.pdf, id=33, 469.755
 pt x 578.16pt>
-File: Granat_Mazzag_TDK2021_files/figure-latex/unnamed-chunk-3-1.pdf Graphic fi
-le (type pdf)
-<use Granat_Mazzag_TDK2021_files/figure-latex/unnamed-chunk-3-1.pdf>
-Package pdftex.def Info: Granat_Mazzag_TDK2021_files/figure-latex/unnamed-chunk
--3-1.pdf  used on input line 147.
-(pdftex.def)             Requested size: 469.75386pt x 578.15858pt.
-<Granat_Mazzag_TDK2021_files/figure-latex/unnamed-chunk-4-1.pdf, id=34, 469.755
-pt x 325.215pt>
-File: Granat_Mazzag_TDK2021_files/figure-latex/unnamed-chunk-4-1.pdf Graphic fi
-le (type pdf)
-<use Granat_Mazzag_TDK2021_files/figure-latex/unnamed-chunk-4-1.pdf>
-Package pdftex.def Info: Granat_Mazzag_TDK2021_files/figure-latex/unnamed-chunk
--4-1.pdf  used on input line 152.
-(pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
-<Granat_Mazzag_TDK2021_files/figure-latex/unnamed-chunk-5-1.pdf, id=35, 1084.05
-pt x 722.7pt>
 File: Granat_Mazzag_TDK2021_files/figure-latex/unnamed-chunk-5-1.pdf Graphic fi
 le (type pdf)
 <use Granat_Mazzag_TDK2021_files/figure-latex/unnamed-chunk-5-1.pdf>
 Package pdftex.def Info: Granat_Mazzag_TDK2021_files/figure-latex/unnamed-chunk
--5-1.pdf  used on input line 155.
-(pdftex.def)             Requested size: 469.75496pt x 313.16995pt.
-LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 1
-58.
-(C:\Users\Marci\AppData\Local\Programs\MiKTeX\tex/latex/lm\t1lmtt.fd
-File: t1lmtt.fd 2009/10/30 v1.6 Font defs for Latin Modern
-)
-LaTeX Font Info:    Trying to load font information for TS1+lmtt on input line 
-161.
-(C:\Users\Marci\AppData\Local\Programs\MiKTeX\tex/latex/lm\ts1lmtt.fd
-File: ts1lmtt.fd 2009/10/30 v1.6 Font defs for Latin Modern
-)
-<Granat_Mazzag_TDK2021_files/figure-latex/unnamed-chunk-10-1.pdf, id=36, 469.75
-5pt x 325.215pt>
-File: Granat_Mazzag_TDK2021_files/figure-latex/unnamed-chunk-10-1.pdf Graphic f
-ile (type pdf)
-<use Granat_Mazzag_TDK2021_files/figure-latex/unnamed-chunk-10-1.pdf>
+-5-1.pdf  used on input line 147.
+(pdftex.def)             Requested size: 469.75386pt x 578.15858pt.
+<Granat_Mazzag_TDK2021_files/figure-latex/unnamed-chunk-6-1.pdf, id=34, 1084.05
+pt x 722.7pt>
+File: Granat_Mazzag_TDK2021_files/figure-latex/unnamed-chunk-6-1.pdf Graphic fi
+le (type pdf)
+<use Granat_Mazzag_TDK2021_files/figure-latex/unnamed-chunk-6-1.pdf>
 Package pdftex.def Info: Granat_Mazzag_TDK2021_files/figure-latex/unnamed-chunk
--10-1.pdf  used on input line 166.
+-6-1.pdf  used on input line 156.
+(pdftex.def)             Requested size: 469.75496pt x 313.16995pt.
+<Granat_Mazzag_TDK2021_files/figure-latex/unnamed-chunk-7-1.pdf, id=35, 469.755
+pt x 325.215pt>
+File: Granat_Mazzag_TDK2021_files/figure-latex/unnamed-chunk-7-1.pdf Graphic fi
+le (type pdf)
+<use Granat_Mazzag_TDK2021_files/figure-latex/unnamed-chunk-7-1.pdf>
+Package pdftex.def Info: Granat_Mazzag_TDK2021_files/figure-latex/unnamed-chunk
+-7-1.pdf  used on input line 161.
 (pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
-[3 <./Granat_Mazzag_TDK2021_files/figure-latex/unnamed-chunk-4-1.pdf>] [4 <./Gr
-anat_Mazzag_TDK2021_files/figure-latex/unnamed-chunk-3-1.pdf>] [5 <./Granat_Maz
-zag_TDK2021_files/figure-latex/unnamed-chunk-5-1.pdf>]
+<Granat_Mazzag_TDK2021_files/figure-latex/unnamed-chunk-9-1.pdf, id=36, 469.755
+pt x 325.215pt>
+File: Granat_Mazzag_TDK2021_files/figure-latex/unnamed-chunk-9-1.pdf Graphic fi
+le (type pdf)
+<use Granat_Mazzag_TDK2021_files/figure-latex/unnamed-chunk-9-1.pdf>
+Package pdftex.def Info: Granat_Mazzag_TDK2021_files/figure-latex/unnamed-chunk
+-9-1.pdf  used on input line 166.
+(pdftex.def)             Requested size: 469.75386pt x 325.2142pt.
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 12.80502pt, for example:
@@ -705,9 +692,35 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 
 (fancyhdr)                \addtolength{\topmargin}{-0.80502pt}.
 
-[6 <./Granat_Mazzag_TDK2021_files/figure-latex/unnamed-chunk-10-1.pdf>]
-LaTeX Font Info:    Font shape `T1/lmtt/bx/n' in size <10> not available
-(Font)              Font shape `T1/lmtt/b/n' tried instead on input line 179.
+[3 <./Granat_Mazzag_TDK2021_files/figure-latex/unnamed-chunk-9-1.pdf>]
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 12.80502pt, for example:
+(fancyhdr)                \setlength{\headheight}{12.80502pt}.
+(fancyhdr)                You might also make \topmargin smaller to compensate:
+
+(fancyhdr)                \addtolength{\topmargin}{-0.80502pt}.
+
+[4 <./Granat_Mazzag_TDK2021_files/figure-latex/unnamed-chunk-5-1.pdf>]
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 12.80502pt, for example:
+(fancyhdr)                \setlength{\headheight}{12.80502pt}.
+(fancyhdr)                You might also make \topmargin smaller to compensate:
+
+(fancyhdr)                \addtolength{\topmargin}{-0.80502pt}.
+
+[5 <./Granat_Mazzag_TDK2021_files/figure-latex/unnamed-chunk-6-1.pdf>]
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 12.80502pt, for example:
+(fancyhdr)                \setlength{\headheight}{12.80502pt}.
+(fancyhdr)                You might also make \topmargin smaller to compensate:
+
+(fancyhdr)                \addtolength{\topmargin}{-0.80502pt}.
+
+[6 <./Granat_Mazzag_TDK2021_files/figure-latex/unnamed-chunk-7-1.pdf>] (Granat_
+Mazzag_TDK2021.bbl)
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 12.80502pt, for example:
@@ -717,11 +730,19 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-0.80502pt}.
 
 [7]
-Underfull \vbox (badness 10000) detected at line 345
- []
-
-
-Underfull \vbox (badness 10000) detected at line 345
+LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 1
+81.
+(C:\Users\Marci\AppData\Local\Programs\MiKTeX\tex/latex/lm\t1lmtt.fd
+File: t1lmtt.fd 2009/10/30 v1.6 Font defs for Latin Modern
+)
+LaTeX Font Info:    Font shape `T1/lmtt/bx/n' in size <10> not available
+(Font)              Font shape `T1/lmtt/b/n' tried instead on input line 186.
+LaTeX Font Info:    Trying to load font information for TS1+lmtt on input line 
+233.
+(C:\Users\Marci\AppData\Local\Programs\MiKTeX\tex/latex/lm\ts1lmtt.fd
+File: ts1lmtt.fd 2009/10/30 v1.6 Font defs for Latin Modern
+)
+Overfull \vbox (1.13313pt too high) detected at line 408
  []
 
 
@@ -733,11 +754,11 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-0.80502pt}.
 
 [8]
-Underfull \vbox (badness 10000) detected at line 345
+Underfull \vbox (badness 10000) detected at line 408
  []
 
 
-Underfull \vbox (badness 10000) detected at line 345
+Underfull \vbox (badness 10000) detected at line 408
  []
 
 
@@ -749,6 +770,13 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-0.80502pt}.
 
 [9]
+Underfull \vbox (badness 10000) detected at line 408
+ []
+
+
+Overfull \vbox (1.01447pt too high) detected at line 408
+ []
+
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 12.80502pt, for example:
@@ -757,18 +785,43 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 
 (fancyhdr)                \addtolength{\topmargin}{-0.80502pt}.
 
-[10] (Granat_Mazzag_TDK2021.aux) ) 
+[10]
+Underfull \vbox (badness 10000) detected at line 408
+ []
+
+
+Underfull \vbox (badness 10000) detected at line 408
+ []
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 12.80502pt, for example:
+(fancyhdr)                \setlength{\headheight}{12.80502pt}.
+(fancyhdr)                You might also make \topmargin smaller to compensate:
+
+(fancyhdr)                \addtolength{\topmargin}{-0.80502pt}.
+
+[11]
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 12.80502pt, for example:
+(fancyhdr)                \setlength{\headheight}{12.80502pt}.
+(fancyhdr)                You might also make \topmargin smaller to compensate:
+
+(fancyhdr)                \addtolength{\topmargin}{-0.80502pt}.
+
+[12] (Granat_Mazzag_TDK2021.aux) ) 
 Here is how much of TeX's memory you used:
- 16432 strings out of 479697
- 250262 string characters out of 2867134
- 641622 words of memory out of 3000000
- 33140 multiletter control sequences out of 15000+200000
- 461791 words of font info for 105 fonts, out of 3000000 for 9000
+ 16456 strings out of 479697
+ 250651 string characters out of 2867134
+ 654127 words of memory out of 3000000
+ 33149 multiletter control sequences out of 15000+200000
+ 466397 words of font info for 109 fonts, out of 3000000 for 9000
  1141 hyphenation exceptions out of 8191
- 79i,11n,85p,1226b,396s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 79i,11n,85p,808b,396s stack positions out of 5000i,500n,10000p,200000b,50000s
 {C:/Users/Marci/AppData/Local/Programs/MiKTeX
-/fonts/enc/dvips/lm/lm-ec.enc}{C:/Users/Marci/AppData/Local/Programs/MiKTeX/fon
-ts/enc/dvips/lm/lm-ts1.enc}<C:/Users/Marci/AppData/Local/Programs/MiKTeX/fonts/
+/fonts/enc/dvips/lm/lm-ts1.enc}{C:/Users/Marci/AppData/Local/Programs/MiKTeX/fo
+nts/enc/dvips/lm/lm-ec.enc}<C:/Users/Marci/AppData/Local/Programs/MiKTeX/fonts/
 type1/public/lm/lmbx10.pfb><C:/Users/Marci/AppData/Local/Programs/MiKTeX/fonts/
 type1/public/lm/lmbx12.pfb><C:/Users/Marci/AppData/Local/Programs/MiKTeX/fonts/
 type1/public/lm/lmbx9.pfb><C:/Users/Marci/AppData/Local/Programs/MiKTeX/fonts/t
@@ -777,12 +830,13 @@ pe1/public/lm/lmr12.pfb><C:/Users/Marci/AppData/Local/Programs/MiKTeX/fonts/typ
 e1/public/lm/lmr17.pfb><C:/Users/Marci/AppData/Local/Programs/MiKTeX/fonts/type
 1/public/lm/lmr5.pfb><C:/Users/Marci/AppData/Local/Programs/MiKTeX/fonts/type1/
 public/lm/lmr9.pfb><C:/Users/Marci/AppData/Local/Programs/MiKTeX/fonts/type1/pu
+blic/lm/lmri10.pfb><C:/Users/Marci/AppData/Local/Programs/MiKTeX/fonts/type1/pu
 blic/lm/lmtk10.pfb><C:/Users/Marci/AppData/Local/Programs/MiKTeX/fonts/type1/pu
 blic/lm/lmtt10.pfb><C:/Users/Marci/AppData/Local/Programs/MiKTeX/fonts/type1/pu
 blic/lm/lmtti10.pfb>
-Output written on Granat_Mazzag_TDK2021.pdf (10 pages, 457954 bytes).
+Output written on Granat_Mazzag_TDK2021.pdf (12 pages, 528084 bytes).
 PDF statistics:
- 181 PDF objects out of 1000 (max. 8388607)
- 24 named destinations out of 1000 (max. 500000)
- 32834 words of extra memory for PDF output out of 35830 (max. 10000000)
+ 209 PDF objects out of 1000 (max. 8388607)
+ 29 named destinations out of 1000 (max. 500000)
+ 34882 words of extra memory for PDF output out of 35830 (max. 10000000)
 
