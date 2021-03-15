@@ -4,7 +4,7 @@ library(rvest)
 library(parallel)
 
 
-URLs <- paste0("https://www.err.ee/api/search/getContentByKeyword/?options=%7B%22total%22:0,%22page%22:1,%22limit%22:20,%22offset%22:",seq(from = 0, to =4280, by = 20),",%22phrase%22:%22%22,%22publicStart%22:%22%22,%22publicEnd%22:%22%22,%22keywordId%22:2216372%7D")
+URLs <- paste0("https://www.err.ee/api/search/getContentByKeyword/?options=%7B%22total%22:0,%22page%22:1,%22limit%22:20,%22offset%22:",seq(from = 0, to =4440, by = 20),",%22phrase%22:%22%22,%22publicStart%22:%22%22,%22publicEnd%22:%22%22,%22keywordId%22:2216372%7D")
 
 
 f.json <- function(URL) {

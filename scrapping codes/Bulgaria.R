@@ -3,7 +3,7 @@
 library(tidyverse)
 library(rvest)
 
-URLs <- paste0('https://bntnews.bg/covid19.html?page=', 1:137)
+URLs <- paste0('https://bntnews.bg/covid19.html?page=', 1:148)
 
 f.URL <- function(page) {
   page %>%

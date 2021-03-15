@@ -1,73 +1,72 @@
-library(jsonlite)
 library(tidyverse)
-library(rvest)
-library(parallel)
+library(magrittr)
 
-
-
-URLs <- paste0("https://hirado.hu/wp-content/plugins/hirado.hu.widgets/widgets/newSearch/ajax_loadmore.php?s=koronav%C3%ADrus&media_type=article&page_number=", 1:543, "&gallery_slug=galeriak&video_slug=videok&video_category=431&elasticPage=-1&elasticPostPage=-1&allVideos=false&galleriesNum=0&videosNum=0") %>%  
-  .[1:10]
-
-f.json <- function(URL) {
-  tryCatch(fromJSON(URL)$link, error = function(e) c(NA))
+for (i in 1:546){
+  URL <- paste("https://hirado.hu/wp-content/plugins/hirado.hu.widgets/widgets/newSearch/ajax_loadmore.php?s=koronav%C3%ADrus&media_type=article&page_number=", i, "&gallery_slug=galeriak&video_slug=videok&video_category=431&elasticPage=-1&elasticPostPage=-1&allVideos=false&galleriesNum=0&videosNum=0", sep="")
+  list <- append(list, data_scrape_hun(i = i, link = URL))
 }
 
-f.gettext <- function(URL) {
-  tryCatch({
-    page <- read_html(URL)
-    data.frame(
-      date = page %>% html_nodes("#bodywrapper > .catBanner .artTime") %>% html_text() %>% paste(collapse = " "),
-      title = page %>% html_nodes("#bodywrapper > .catBanner h1") %>% html_text() %>% paste(collapse = " "),
-      URL = URL,
-      text = page %>% 
-        html_nodes('#bodywrapper > .gridFix p') %>% 
-        html_text() %>% 
-        paste(collapse = " ")
-    ) }
-    ,
-    error = function(e) NULL)
-}
 
-URLsToArticle <- vector()
-
-for (i in seq_along(URLs)) {
- URLsToArticle <- c(URLsToArticle, f.json(URLs[i]))
- print(i)
-}
-
-URLsToArticle <- na.omit(URLsToArticle) 
-print(URLsToArticle)
-
-Hungary_rawtext <- f.gettext(URL[1])
-for (i in 2:length(URLsToArticle)) {
-  Hungary_rawtext <- rbind(f.gettext(URL[i]))
-  if (i %/% 10 == 0) { # check
-    print(tail(Hungary_rawtext)); print(tibble(Hungary_rawtext))
+for (i in 1:10320){
+  if (typeof(newlist[[i]]) == "integer"){
+    URL <- paste("https://hirado.hu/wp-content/plugins/hirado.hu.widgets/widgets/newSearch/ajax_loadmore.php?s=koronav%C3%ADrus&media_type=article&page_number=", newlist[[i]], "&gallery_slug=galeriak&video_slug=videok&video_category=431&elasticPage=-1&elasticPostPage=-1&allVideos=false&galleriesNum=0&videosNum=0", sep="")
+    newlist <- append(newlist, data_scrape_hun(i = newlist[[i]], link = URL))
   }
 }
 
-# cl <- makeCluster(7)
-# 
-# clusterEvalQ(cl, library(rvest))
-# clusterEvalQ(cl, library(jsonlite))
-# clusterEvalQ(cl, library(purrr))
-# clusterEvalQ(cl, library(magrittr))
-# clusterEvalQ(cl, library(stringr))
-# 
-# 
-# clusterExport(cl, list("f.gettext", "URLsToArticle"), envir = environment())
+list <- append(list, newlist)
 
-# Hungary_rawtext <- parLapply(cl = cl, X = URLsToArticle, fun = f.gettext)
-# stopCluster(cl)
+df <- data.frame(links = matrix(unlist(list), nrow=10941, byrow=TRUE), stringsAsFactors=FALSE)
+library(dplyr)
+df_2 <- df %>% 
+  filter(nchar(links)>5) %>% 
+  mutate(links = gsub("^//hirado", "https://hirado", links))
 
-Hungary_rawtext <- reduce(Filter(f = Negate(is.null), Hungary_rawtext), rbind) %>% 
-  mutate_all(function(x) {
-    str_remove_all(x, "\r") %>% 
-    str_remove_all("\n") %>% 
-    str_remove_all("\t") %>% 
-    str_remove_all("  ")
-  } 
+
+data_scrape_hun <- function(i, link){
+  tryCatch(
+    expr = {
+      print(i)
+      page <- read_html(URL)
+      return(c(paste(html_text(page %>% rvest::html_nodes(".articleContent>p, .articleLead>strong>p")), collapse = " "), 
+               html_text(page %>% rvest::html_nodes(".artTime")), html_text(page %>% rvest::html_nodes("h1"))))
+    },
+    error = function(e){
+      if (grepl("404", e, fixed = TRUE)){
+        timer(0)
+      }
+      else{
+        message('Caught an error!')
+        print(e)
+        timer(2)
+      }
+      
+    },
+    warning = function(w){
+      message('Caught a warning!')
+      print(w)
+    }
+  )    
+}
+
+for (i in 1:nrow(df_2)){
+  URL <- df_2$links[i]
+  dataframe <- data_scrape_hun(i = i, link = URL)
+  df_2$date[i] <- dataframe[2]
+  df_2$text[i] <- dataframe[1]
+  df_2$title[i] <- dataframe[3]
+}
+
+df_2 %<>% 
+  select(date, title, URL = links, text) %>% 
+  #mutate_at(-1, function(x) zoo::na.locf(x)) %>% 
+  #filter(!str_detect(date, '_x000') & !str_detect(date, ':') & date != '0') %>% 
+  #filter(!str_detect(text, 'mtva_player')) %>% # TODO consider a better solution
+  mutate(
+    date = gsub("\\s+", " ", str_trim(date)),
+    title = gsub("\\s+", " ", str_trim(title)),
+    text = gsub("\\s+", " ", str_trim(text))
   )
 
-setwd("C:/rprojects/CoronaSentiment/scrapping RData")
-save(list = c("Hungary_rawtext"), file = "Hungary_rawtext.RData")
+
+write.csv(df_2, "Hungary_rawtext.csv")

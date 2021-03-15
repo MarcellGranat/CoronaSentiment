@@ -4,7 +4,7 @@ library(tidyverse)
 library(rvest)
 
 URLs<- c('https://www.france24.com/fr/tag/covid-19/#paper',
-             paste0('https://www.france24.com/fr/tag/covid-19/', 2:190, '/#paper')
+             paste0('https://www.france24.com/fr/tag/covid-19/', 2:218, '/#paper')
 )
 
 f.URL <- function(page) {

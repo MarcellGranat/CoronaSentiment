@@ -4,7 +4,7 @@ library(tidyverse)
 library(rvest)
 library(parallel)
 
-pages.raw <- lapply(0:199, function(i)
+pages.raw <- lapply(0:50, function(i) # max 200
   read_html(paste0('https://yle.fi/aihe/t/18-89760?page=', i))
 )
 
@@ -58,4 +58,4 @@ Finland_rawtext <- cbind(Finland_rawtext, reduce(articles, rbind))
 
 # saving --------------------------------------------------------
 setwd("C:/rprojects/CoronaSentiment/scrapping RData")
-save(list = c("Finland_rawtext"), file = "Finland_rawtext.RData")
+save(list = c("Finland_rawtext"), file = "Finland_rawtext2.RData")

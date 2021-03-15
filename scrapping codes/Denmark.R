@@ -4,7 +4,9 @@ library(tidyverse)
 library(rvest)
 library(parallel)
 
-URLs <- paste0('https://politiken.dk/search/?q=covid&target=pol&page=', 1:186, "/") 
+URLs <- c(paste0('https://politiken.dk/search/?q=covid&target=pol&page=', 1:200),
+          'https://politiken.dk/search/?q=covid&target=pol&fDate=2020-01-01&tDate=2020-02-25&sort=pd&page=1'
+          )
 
 f.initial_df <- function(URL) {
   tryCatch({
@@ -45,6 +47,7 @@ stopCluster(cl)
 
 Denmark_rawtext <- cbind(initial_df, reduce(articles, c)) %>% 
   set_names("date", "title", "URL", "text") %>% 
+  tibble() %>% 
   filter(text != "") %>% 
   mutate(
     date = gsub(" kl.*", "", date),
@@ -53,10 +56,9 @@ Denmark_rawtext <- cbind(initial_df, reduce(articles, c)) %>%
     text = str_replace_all(text, "\n", " "), 
     text = str_replace_all(text, "\t", " "),
     text = str_replace_all(text, '"', " "),
-    text = str_remove_all(text, '  '),
-    date = str_remove_all(date, '  '),
-    title = str_remove_all(title, '  ')
+    date = trimws(date),
+    title = trimws(title),
+    text = trimws(text)
   )
 
-setwd("C:/rprojects/CoronaSentiment/scrapping RData")
-save(list = c("Denmark_rawtext"), file = "Denmark_rawtext.RData")
+save(list = c("Denmark_rawtext"), file = "C:/rprojects/CoronaSentiment/scrapping RData/Denmark_rawtext.RData")

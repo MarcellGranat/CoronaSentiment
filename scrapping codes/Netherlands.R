@@ -4,8 +4,8 @@ library(tidyverse)
 library(rvest)
 library(parallel)
 
-URLs <- c(paste0('https://nos.nl/zoeken/?q=covid&page=', 0:49),
-          paste0('https://nos.nl/zoeken/?q=coronavirus&page=', 0:19))
+URLs <- c(paste0('https://nos.nl/zoeken/?q=covid&page=', 0:56),
+          paste0('https://nos.nl/zoeken/?q=coronavirus&page=', 0:214))
 
 
 f.initial_df <- function(URL) {
@@ -43,11 +43,12 @@ cl <- makeCluster(1)
 clusterExport(cl, list("URLs", "f.initial_df"), envir = environment())
 clusterEvalQ(cl, library(rvest))
 clusterEvalQ(cl, library(purrr))
+clusterEvalQ(cl, library(magrittr))
 
 initial_df <- parLapply(cl = cl, X = URLs, fun = f.initial_df)
-initial_df <- reduce(Filter(f = Negate(is.null), initial_df), rbind)
+initial_df <- reduce(Filter(f = Negate(is.null), initial_df), rbind) %>% 
+  dplyr::filter(!duplicated(URL))
 
-clusterEvalQ(cl, library(magrittr))
 clusterEvalQ(cl, library(stringr))
 clusterExport(cl, list("f.text", "initial_df"), envir = environment())
 
@@ -58,6 +59,4 @@ Netherlands_rawtext <- cbind(initial_df, reduce(articles, c)) %>%
   set_names("date", "title", "URL", "text") %>% 
   filter(text != "") # TODO manage date
 
-
-setwd("C:/rprojects/CoronaSentiment/scrapping RData")
-save(list = c("Netherlands_rawtext"), file = "Netherlands_rawtext.RData")
+save(list = c("Netherlands_rawtext"), file = "C:/rprojects/CoronaSentiment/scrapping RData/Netherlands_rawtext.RData")

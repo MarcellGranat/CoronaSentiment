@@ -1,10 +1,10 @@
-# Fri Feb 19 17:35:22 2021 ------------------------------
+# Mon Mar 01 22:14:58 2021 ------------------------------
 
 library(tidyverse)
 library(rvest)
 library(parallel)
 
-URLs <- paste0('https://www.diepresse.com/suche?s=coronavirus&p=', 1:456)
+URLs <- paste0('https://www.diepresse.com/suche?s=coronavirus&p=', 1:461)
 
 f.initial_df <- function(URL) {
   tryCatch({
@@ -25,7 +25,7 @@ data.frame(URL, date = article_page %>%
     html_text() %>% 
     str_c(collapse = " "),
          text = article_page %>% 
-             html_nodes("p") %>%
+             html_nodes("#article-body p") %>%
              html_text() %>%
              str_c(collapse = " "))}
            ,
