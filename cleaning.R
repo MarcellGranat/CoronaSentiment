@@ -365,9 +365,12 @@ croatia <- read_excel("croatia.xlsx") %>%
 
 austria <- read_excel("austria.xlsx") %>% 
   mutate(
-    date = mdy(date)
+    date = mdy(date),
+    text = str_remove_all(text, '[( ][Aa][Pp][Aa][) ]'),
+    text = str_remove_all(text, '[( ][Dd][Pp][Aa][) ]'),
+    text = str_remove_all(text, '[( ][Aa][Ff][Pp][) ]'),
+    text = str_remove_all(text, '[( ][Rr]euters[) ]')
     ) %>% rename(URL = Url)
-
 
 # slovenia --------------------------------------------------------------------------
 
