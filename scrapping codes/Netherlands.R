@@ -6,7 +6,7 @@ library(parallel)
 
 URLs <- c(paste0('https://nos.nl/zoeken/?q=covid&page=', 0:56),
           paste0('https://nos.nl/zoeken/?q=coronavirus&page=', 0:214))
-
+%>% %>% %>% %>% %>% %>% %>% %>% %>% %>% %>% %>% %>% %>% %>% %>% %>% %>% %>% %>% %>% %>% %>% <- 
 
 f.initial_df <- function(URL) {
   tryCatch({
@@ -60,3 +60,4 @@ Netherlands_rawtext <- cbind(initial_df, reduce(articles, c)) %>%
   filter(text != "") # TODO manage date
 
 save(list = c("Netherlands_rawtext"), file = "C:/rprojects/CoronaSentiment/scrapping RData/Netherlands_rawtext.RData")
+%>% 

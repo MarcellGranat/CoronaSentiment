@@ -42,7 +42,17 @@ greece <- greece %>%
     text = gsub("Photo: ", "", text),
     text = str_remove_all(text, 'Share the article:'),
     text = gsub("Reportage-text-photo: ", "", text),
-    text = str_remove_all(text, 'Source απε'),
+    text = str_remove_all(text, 'Source:*'),
+    text = str_remove_all(text, 'SOURCE'),
+    text = str_remove_all(text, 'απε'),
+    text = str_remove_all(text, 'ΑΠΕ'),
+    text = str_remove_all(text, 'ΜΠΕ'),
+    text = str_remove_all(text, 'ΕRT'),
+    text = str_remove_all(text, 'ERT1'),
+    text = str_remove_all(text, 'AFP'),
+    text = str_remove_all(text, 'Reuters'),
+    text = gsub('Related news.*', '', text),
+    text = gsub('Share this article', '', text),
     date2 = ifelse(is.na(date2), as.character(lubridate::dmy(date)), as.character(date2)),
     date = ifelse(is.na(date2), as.character(as.Date(as.numeric(date), 
                                                      origin = "1899-12-30")),
@@ -96,17 +106,55 @@ finland <- finland %>%
   filter(!duplicated(URL) & !is.na(text) & str_length(text) != 0) %>% 
   mutate(
     date = lubridate::mdy(date),
-    text = str_remove_all(text, '(another service)')
+    text = str_remove_all(text, '(another service)') # TODO other formats
   ) %>% 
   select(-r) %>% 
   filter(text != "AS")
 
+finland <- read_excel("finland2.xlsx") %>%
+  filter(!is.na(text)) %>%
+  mutate(
+    date = ifelse(str_detect(date, '-'), date, as.character(as.Date(as.numeric(date), origin = "1899-12-30"))),
+    date = ymd(date)
+  ) %>% 
+  arrange(!is.na(date)) %>%
+  rbind(finland) %>% 
+  filter(!duplicated(URL))
+
+finland %>% 
+  mutate(
+    text = str_remove_all(text, 'you will switch to another service'),
+    text = str_remove_all(text, 'you switch to another service'),
+    text = str_remove_all(text, 'switch to another service'),
+    text = str_remove_all(text, 'you will move to another service'),
+    text = str_remove_all(text, 'move to another service'),
+    text = str_remove_all(text, 'you move to another service'),
+    text = str_remove_all(text, 'moving to another service'),
+    text = str_remove_all(text, 'switching to another service'),
+    text = str_remove_all(text, 'you will go to another service'),
+    text = str_remove_all(text, 'you go to another service'),
+    text = str_remove_all(text, 'going to another service'),
+    text = str_remove_all(text, 'go to another service'),
+    text = str_remove_all(text, 'which moves to another service'),
+    text = str_remove_all(text, 'transferred to another service'),
+    text = str_remove_all(text, 'at another service'),
+    text = str_remove_all(text, 'read on to another service'),
+    text = str_remove_all(text, ' to another service'),
+    text = str_remove_all(text, '\\(\\)'),
+  ) %>%   
+  filter(str_detect(text, 'another service')) %>% 
+  pull(4) %>% 
+  {
+  print(length(.))
+  print(.[4])
+  }
 
 # france --------------------------------------------------------
 
 france <- read_excel("france.xlsx") %>% 
-  mutate(date = lubridate::mdy(date)) %>% 
-  filter(!is.na(date))
+  mutate(date = paste0('202', gsub('-.*', '', gsub('.*/202', '', URL))),
+         date = ymd(date)
+         ) 
 
 
 # iceland -------------------------------------------------------
@@ -119,7 +167,6 @@ iceland <- read_excel("iceland.xlsx") %>%
 
 f.remove_writer <- function(x) {
   if (str_starts(x, 'by')) {
-    
   spaces <- str_locate_all(x," ")[[1]][,1] 
   spaces <-  ifelse(spaces < str_locate(x," [[:lower:]]")[[1]], spaces, NA)
   str_sub(x, start = max(na.omit(spaces)) + 1)
@@ -151,8 +198,13 @@ italy <- reduce(italy, rbind) %>%
       T ~ as.character(NA)
     ),
     date = ymd(date),
-    text = paste0(gsub('.*-', '', str_sub(text, end = 20)), str_sub(text, start = 21))
-  ) 
+    text = paste0(gsub('.*-', '', str_sub(text, end = 20)), str_sub(text, start = 21)),
+  ) %>% 
+  mutate(text = str_remove_all(text, "kwait.*[);\\]]{3}")) %>% 
+  mutate(text = str_remove_all(text, "kwait.*pl_listen")) %>% 
+  mutate(text = str_remove_all(text, "kwait.*pm_list")) %>% 
+  mutate(text = str_remove_all(text, "kwait.*[aA]dref *="))
+  
 
 # malta ---------------------------------------------------------
 
@@ -198,6 +250,7 @@ portugal <- read_excel("portugal.xlsx") %>%
                   as.character(date2)),
     date = ymd(date)
   ) %>% filter(!is.na(date)) %>% filter(!is.na(text)) %>% 
+  mutate(text = str_remove_all(text, "\\.var.*() *;")) %>% 
   select(-c(date2, date3, date4, date5))
 
 
@@ -228,9 +281,6 @@ spain <- read_excel("spain.xlsx") %>%
     date = ymd(str_extract(Url, "202[0-9]{5}"))
   ) %>% 
   filter(!is.na(date)) %>% 
-  mutate(
-    text = str_remove_all(text, str_c(c('pic.twitter.com'), collapse="|"))
-  ) %>% 
   rename(URL = Url)
 
 # belgium_french --------------------------------------------------------------------
@@ -240,7 +290,8 @@ belgium_french <- read_excel("belgium_french.xlsx") %>%
   filter(str_detect(date, '202')) %>% 
   mutate(
     date2 = gsub(".*day,* ", "", date),
-    date = ifelse(grepl(",", date2, fixed = TRUE), as.character(mdy(date2)), as.character(dmy(date2)))
+    date = ifelse(grepl(",", date2, fixed = TRUE), as.character(mdy(date2)),
+                  as.character(dmy(date2)))
   ) %>% 
   select(date, title, URL = Url, text)
 
@@ -268,7 +319,10 @@ slovakia <- read_excel("slovakia.xlsx") %>%
                          as.character(date3)),
                   as.character(date2)),
     date = ymd(date)
-  ) %>% select(-c(date2, date3, date4))
+  ) %>% 
+  mutate(text = str_remove_all(text, "[pP]hoto[ ]*gallery.*();")) %>% 
+  mutate(text = str_remove_all(text, "[Jj\\.]wplayer.*();")) %>% 
+  select(-c(date2, date3, date4))
 
 
 # romania ---------------------------------------------------------------------------
@@ -330,7 +384,12 @@ slovenia <- read_excel("slovenia.xlsx")  %>%
 # switzerland -----------------------------------------------------------------------
 
 load("C:/rprojects/CoronaSentiment/scrapping RData/Switzerland_rawtext.RData")
-
+  
+switzerland <- Switzerland_rawtext %>% 
+  mutate(
+    text = str_remove_all(text, 'This article was automatically imported from our old content management system. If you see any display errors, please let us know: community-feedback@swissinfo.ch')
+  ) %>% 
+  tibble()
 
 # hungary ---------------------------------------------------------------------------
 
@@ -362,14 +421,18 @@ estonia <- read_excel("estonia.xlsx") %>%
 
 # poland ----------------------------------------------------------------------------
 
-poland <- read_excel("poland.xlsx") %>% 
+poland <- read_excel("poland.xlsx") %>% # TODO wrong excel 
   tibble() %>% 
   mutate(
-    date = mdy(date),
+    date = ymd(date),
     title = 'poland',
     text = text_final
   ) %>% 
-  select(date, title, URL = Url, text)
+  select(date, title, URL, text) %>% 
+  mutate(text = str_remove_all(text, "U FFFD")) %>% 
+  mutate(text = str_remove_all(text, "function.*640px")) %>% 
+  mutate(text = str_remove_all(text, "[KC]ORONA[VW]IRUS R[EI]PORT"))
+  mutate(text = str_remove_all(text, "[KC]ORONA[VW]IRUS[\\.]* R[EI]PORT"))
 
 # ireland ---------------------------------------------------------------------------
 
@@ -415,6 +478,57 @@ luxemburg <- read_excel("luxemburg.xlsx") %>%
     text = Text
   )
 
+
+# netherlands -----------------------------------------------------------------------
+
+
+
+netherlands <- read_excel("netherlands.xlsx") %>% 
+  mutate(
+    date2 = ifelse(str_detect(date, '2020'), as.character(dmy(gsub(', .*', '', date))), 
+                   paste0('2021', case_when(
+      str_detect(date, 'Jan') ~ '-1-',
+      str_detect(date, 'Feb') ~ '-2-',
+      str_detect(date, 'Mar') ~ '-3-',
+      str_detect(date, 'Apr') ~ '-4-',
+      str_detect(date, 'May') ~ '-5-',
+      str_detect(date, 'Jun') ~ '-6-',
+      str_detect(date, 'Jul') ~ '-7-',
+      str_detect(date, 'Aug') ~ '-8-',
+      str_detect(date, 'Sep') ~ '-9-',
+      str_detect(date, 'Oct') ~ '-10-',
+      str_detect(date, 'Nov') ~ '-11-',
+      str_detect(date, 'Dec') ~ '-12-',
+      T ~ as.character(NA)
+    ), str_remove_all(gsub('..:..', '', date), '[^\\d]')
+                   )
+    ),
+    date3 = ifelse(as.numeric(str_remove_all(str_sub(date2, end = 7), '[^\\d]')) > 20213, str_replace_all(date2, '2021', replacement = '2020'), date2),
+    date3 = ymd(date3)
+  ) %>% 
+  select(date = date3, title, URL, text)
+    
+
+  
+  
+  # mutate(
+  #   date2 = gsub('..:..', '', date),
+  #   date2 = str_remove_all(date2, paste("Saturday", "Sunday", collapse = "|")), # TODO
+    # date2 = str_remove_all(date2, str_c('Sat', 'Sun', 'Fri', 'Thu', 'Mon', 'Wed', 'Tue', collapse = '|')),
+    # date2 = str_remove_all(date2, ','),
+    # date2 = str_remove_all(date2, 'AM'),
+    # date2 = str_remove_all(date2, 'am'),
+    # date2 = str_remove_all(date2, 'PM'),
+    # date2 = str_remove_all(date2, 'pm'),
+    # date3 = ifelse(str_detect(date2, '202'), date2, paste(date2, '2021')),
+    # date3 = dmy(date2),
+    # date3 = ifelse(is.na(date3), as.character(mdy(date2)), as.character(date3)),
+    # date3 = ymd(date3) # TODO cointinue
+  # )
+# %>%
+  # arrange(!is.na(date3))
+
+
 # merge ---------------------------------------------------------
 
 dat <- greece %>% mutate(country = "EL") %>% 
@@ -438,7 +552,7 @@ dat <- greece %>% mutate(country = "EL") %>%
   rbind(mutate(croatia, country = "HR")) %>% 
   rbind(mutate(austria, country = "AT")) %>%
   rbind(mutate(slovenia, country = "SI")) %>%
-  rbind(mutate(Switzerland_rawtext, country = "CH")) %>%
+  rbind(mutate(switzerland, country = "CH")) %>%
   rbind(mutate(hungary, country = "HU")) %>%
   rbind(mutate(cyprus, country = "CY")) %>%
   rbind(mutate(estonia, country = "EE")) %>%
@@ -449,9 +563,11 @@ dat <- greece %>% mutate(country = "EL") %>%
   rbind(mutate(uk, country = "UK")) %>%
   rbind(mutate(luxemburg, country = "LU")) %>%
   mutate(
+    text = gsub('https.* ', '', 'text'),
+    text = gsub('pic.twitter.com.* ', '', 'text'),
     text = str_replace_all(text, '\"', " "),
     text = str_replace_all(text, '«', " "),
-    text = str_replace_all(text, '»', " "),
+    text = str_replace_all(text, '»', " "), 
     title = str_replace_all(title, '\"', " ") # TODO more special characters
   ) %>% 
   filter(
@@ -488,7 +604,6 @@ dat <- dat %>%
 
 # add sentiment ---------------------------------------------------------------------
 
-  
 dat_sentiment_daily <- tibble()  
 dat_sentiment_monthly <- tibble()  
 dat_words_monthly <- tibble()  
