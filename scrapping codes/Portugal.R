@@ -4,7 +4,7 @@ library(rvest)
 library(parallel)
 
 
-URLs <- paste0("https://www.rtp.pt/noticias/rc/playlist/topics/1293026/covid-19/", 1:2456) 
+URLs <- paste0("https://www.rtp.pt/noticias/rc/playlist/topics/1293026/covid-19/", 1:2843)
 
 f.json <- function(URL) {
   tryCatch(fromJSON(URL)$url, error = function(e) c(NA))
@@ -18,7 +18,7 @@ f.gettext <- function(URL) {
       title = page %>% html_nodes("h1") %>% html_text() %>% paste(collapse = " "),
       URL = URL,
       text = page %>% 
-        html_nodes('section.article-body') %>% 
+        html_nodes('.article-lead , .article-body p') %>% 
         html_text() %>% 
         paste(collapse = " ")
     )
@@ -29,7 +29,6 @@ f.gettext <- function(URL) {
   }
   ,
   error = function(e) NULL)
-  
 }
 
 cl <- makeCluster(7)
@@ -47,6 +46,7 @@ URLsToArticle <- reduce(URLsToArticle, c)
 URLsToArticle <- na.omit(URLsToArticle)
 
 clusterExport(cl, list("f.gettext", "URLsToArticle"), envir = environment())
+print('scrape!')
 
 Portugal_rawtext <- parLapply(cl = cl, X = URLsToArticle, fun = f.gettext)
 stopCluster(cl)

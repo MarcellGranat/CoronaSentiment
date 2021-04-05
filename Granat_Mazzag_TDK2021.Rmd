@@ -21,7 +21,7 @@ header-includes:
 - \pretitle{\begin{center}\LARGE\includegraphics[width=5cm]{logo.png}\\[\bigskipamount]}
 - \posttitle{\end{center}}
 editor_options: 
-  chunk_output_type: inline
+  chunk_output_type: console
 ---
 
 \pagebreak
@@ -33,7 +33,6 @@ editor_options:
 Kutatásunkban szótáralapú szövegelemzési módszerekkel megvizsgáljuk, hogy a különböző európai országok sajtótermékeiben megjelenő koronavírusról szóló hírek milyen szentimenttel rendelkeztek az elmúlt egy évben. Továbbá az országok médiumait klaszterekbe soroljuk az alapján, hogy mennyire reflektálta az átadott érzelem a járvány súlyosságát. Ehhez különböző panel- és idősorelemzési módszereket használtunk elemezve mind a fertőzöttek és halálozások számát, mind pedig a gazdasági mutatókat is. Végül Magyarországot vizsgáljuk meg részletesen és megmutatjuk, hogy a járvány első két hulláma között volt-e különbség a szentiment és a súlyosság együttmozgása között: az első hullám hatására enyhült-e a közvélemény az év második felére.
 \end{abstract}
 ```
-
 
 \listoftables
 
@@ -64,7 +63,7 @@ library(lubridate)
 
 ```
 
-```{r theme}
+```{r theme, include=FALSE}
 ## Gg theme =============================================================================
 
 update_geom_defaults("point", list(fill = "cyan4", 
@@ -87,12 +86,14 @@ theme_set(theme_grey() + theme(
   plot.caption = element_text(family = "serif")
 ))
 
+Sys.setlocale(locale ='Hungarian')
+
 ```
 
 ```{r}
 # Data ----------------------------------------------------------------------------------
 
-load("dat_aux.RData")
+load("C:/rprojects/CoronaSentiment/dat_modified_bing.RData")
 # This RData contains the articles after the main cleaning process
 # To ensure full reproducibility see the attached files at the corresponding
 # GitHub Repo: -> https://github.com/MarcellGranat/CoronaSentiment <-
@@ -127,12 +128,16 @@ ggpubr::ggarrange(
     geom_col(color = 'black', fill = "gray70") +
     labs(title = 'Magyarul', x = 'Előfordulási gyakoriság', y = NULL),
   
-  dat_sentiment %>% 
+  dat_words_monthly %>% 
     filter(country == 'HU') %>% 
+    group_by(country, words) %>% 
+    summarise(n = sum(n)) %>% 
+    ungroup() %>% 
     filter(!str_detect(words, '\\d')) %>% 
     anti_join(data.frame(words = c(stopwords::stopwords(), "also", "can"))) %>% 
-    count(words, value, sort = T) %>%
     arrange(desc(n)) %>%
+    left_join(get_sentiments("afinn"), 
+              by=c("words"="word")) %>% 
     head(30) %>% 
     mutate(
       value = case_when(
@@ -162,7 +167,9 @@ ggpubr::ggarrange(
 ```{r fig.cap="A szentiment alakulása országonként", fig.height=10, fig.width=15, out.extra='angle=90', fig.align ='center', }
 # Explore the data ----------------------------------------------------------------------
 
-ggplot(dat_sentiment_daily, aes(date, value)) +
+dat_sentiment_daily %>% 
+  mutate(code = country) %>% 
+  ggplot(aes(date, sentiment)) +
   geom_hline(yintercept = 0, color = "grey20") +
   geom_line(size = .3, color = 'grey50') +
   geom_smooth(size = 1.5, se = F) +
@@ -176,14 +183,25 @@ ggplot(dat_sentiment_daily, aes(date, value)) +
 ```{r fig.cap="Leggyakrabban előforduló pozitív és negatív szentimenttel rendelkező szavak"}
 library(reshape2)
 
-dat_sentiment %>% 
-  na.omit() %>% 
+dat_words_monthly %>% 
+  group_by(country, words) %>% 
+  summarise(n = sum(n)) %>% 
+  ungroup() %>% 
+  filter(!str_detect(words, '\\d')) %>% 
+  anti_join(data.frame(words = c(stopwords::stopwords(), "also", "can"))) %>% 
+  arrange(desc(n)) %>%
+  left_join(get_sentiments("afinn"), 
+            by=c("words"="word")) %>% 
   mutate(
     sentiment = ifelse(value > 0, "Pozitív", "Negatív")
   ) %>% 
-  count(words, sentiment, sort = TRUE) %>%
+  na.omit() %>% 
+  arrange(desc(n)) %>% 
+  group_by(sentiment) %>% 
+  group_modify(~ head(.x, 50)) %>% 
+  ungroup() %>% 
   acast(words ~ sentiment, value.var = "n", fill = 0) %>%
-  comparison.cloud(colors = c("red4", "cyan4"),
+  comparison.cloud(colors = c("cyan4", "red4"),
                    max.words = 100)
 
 ```
@@ -192,20 +210,48 @@ dat_sentiment %>%
 dat_plm <- dat_eco_sent %>% 
   filter(indic == "BS-ESI-I") %>% 
   select(date = time, code = geo, eco = values) %>% 
-  merge(dat_sentiment_monthly) %>% 
-  merge(dat_unemployment) %>% 
-  merge(dat_covid_monthly) %>% 
+  merge(mutate(dat_sentiment_monthly, code = country), all = T) %>% 
+  merge(dat_unemployment, all = T) %>% 
+  merge(dat_covid_monthly, all = T) %>% 
   mutate(
     t = lubridate::interval(lubridate::ymd('2020-01-01'), date),
-    t = lubridate::as.period(t) %/% months(1)
-  )
+    t = lubridate::as.period(t) %/% months(1),
+    cases = ifelse(is.na(cases), 0, cases),
+    death = ifelse(is.na(death), 0, death)
+  ) %>% 
+  select(-country, -n) %>% 
+  pivot_longer(-c(1:2)) %>% 
+  {
+    rbind(.,
+          mutate(., 
+                 name = paste0(name, '_l'),
+                 date = date %m+% months(1)
+          )
+    )
+  } %>%
+  pivot_wider(names_from = name, values_from = value) %>% 
+  mutate(
+    cases_l = ifelse(is.na(cases_l), 0, cases_l),
+    death_l = ifelse(is.na(death_l), 0, death_l)
+  ) %>% 
+  mutate(t_2 = t*t) %>% 
+  filter(!is.na(sentiment)) %>% 
+  filter(t != 0 & t != 1 & !(code %in% c('MT', 'BG', 'CY')))
 
 ```
 
 ```{r}
+# dat_plm <- dat_plm %>% 
+#   group_by(code) %>% 
+#   group_modify(~ if(nrow(.x) == 13) {.x} else {.x[0,]}) %>% 
+#   ungroup()
+```
+
+
+```{r}
 # Regression tree -----------------------------------------------------------------------
 
-m_tree <- rpart::rpart(data = dat_plm, formula = value ~ .-date-code-n,
+m_tree <- rpart::rpart(data = na.omit(dat_plm), formula = sentiment ~ eco + unemployment + cases + death + t,
                        cp = .01)
 
 rattle::fancyRpartPlot(m_tree, palettes = 'PuRd', sub = NULL)
@@ -215,12 +261,43 @@ rattle::fancyRpartPlot(m_tree, palettes = 'PuRd', sub = NULL)
 # Modellezés és hipotézis vizsgálat
 
 ```{r}
+dat_plm %>% 
+  select(date, code, sentiment, eco, unemployment) %>% 
+  pivot_longer(-c(1:2)) %>% 
+  na.omit() %>% 
+  ggplot() +
+  aes(date, code, fill = name) +
+  geom_tile(color = "black", show.legend = F) +
+  scale_fill_viridis_d() +
+  facet_wrap(~ name, labeller =
+               as_labeller(c('eco' = 'Gazdasági szentiment',
+                             'sentiment' = 'Hírekben megjelenő szentiment',
+                             'unemployment' = 'Munkanélküliség')))
+
+```
+
+
+```{r}
 ## Initial models =======================================================================
 
 library(plm)
 
 m_panels <- c(
-  'value ~  unemployment + cases + death + t + eco + t:death'
+  'sentiment ~ cases',
+  'sentiment ~ cases:t',
+  'sentiment ~ cases + cases:t',
+  'sentiment ~ cases + cases:t + unemployment',
+  'sentiment ~ cases + eco + unemployment',
+  'sentiment ~ cases + cases:t + unemployment + eco',
+  'sentiment ~ death',
+  'sentiment ~ death:t_2',
+  'sentiment ~ death + death:t + death:t_2',
+  'sentiment ~ death + unemployment',
+  'sentiment ~ death + eco',
+  'sentiment ~ death + eco + unemployment',
+  'sentiment ~ death + death:t + unemployment',
+  'sentiment ~ death + death:t + unemployment + eco',
+  'sentiment ~ unemployment + eco'
 ) %>% 
   lapply(function(formula) {
     pooling <- plm(eval(formula), data = dat_plm, model = "pooling")
@@ -231,7 +308,9 @@ m_panels <- c(
         pooltest(pooling, within)$p.value,
         phtest(within, random)$p.value,
         plm::r.squared(within, dfcor = T)),
-      model = within,
+      random = random,
+      within = within,
+      pooling = pooling,
       OLS = lm(data = dat_plm, formula = eval(paste(formula, "+ code")))
     )
   })
@@ -242,75 +321,322 @@ m_panels <- c(
 m_panels[[1]]$tests
 ```
 
-```{r}
-m_panels[[1]]$OLS %>% 
-  broom::tidy() %>% 
-  filter(!str_detect(term, 'code')) %>% 
-  knitr::kable(caption = 'Becsült koeffieciensek a fix hatás modellre')
-```
+Ez eddig nem fixnek tűnik, de majd meglátjuk a késleltetésekkel.
 
 ```{r}
-m_panels[[1]]$OLS %>% 
-  QuantPsyc::lm.beta() %>% 
-  broom::tidy() %>% 
-  filter(!str_detect(term, 'code'))
-```
-
-```{r results='asis'}
-merge(
-  dat_sentiment %>% 
-    filter(country == 'HU') %>% 
-    mutate(
-      date = ym(paste(as.character(year(date)), as.character(month(date)))),
-      words = SnowballC::wordStem(words)
-    ) %>% 
-    group_by(date, words) %>% 
-    summarise(n = n()),
-  dat_sentiment %>% 
-    filter(country == 'HU') %>% 
-    group_by(words) %>% 
-    summarise(total = n())) %>% 
-  mutate(tfr = n/total, date) %>% 
-  filter(total > 40) %>% 
-  arrange(desc(tfr)) %>% 
-  tibble() %>% 
-  {split(., with(., date), drop = TRUE)} %>% 
-  lapply(function(x) select(head(x, 10), words)) %>% 
-  reduce(cbind) %>% 
-  {set_names(., str_sub(as.character(as.Date(1:ncol(.)*29, origin = '2020-01-01')),
-                        end = 7))} %>% 
-  {
-    print(knitr::kable(select(., 1:7), align = rep('c', 7)))
-    print(knitr::kable(select(., 8:14), align = rep('c', 7), caption = 'Lesz még'))
+lapply(m_panels, function(x) {
+  if (x$tests[1] < .5) {
+    if (x$tests[2] < .1) {
+      x$within %>% 
+        broom::tidy() %>% 
+        filter(!str_detect(term, 'code')) %>% 
+        granatlib::prtbl('Becsült koeffieciensek a fix hatás modellben')
+    } else {
+      x$random %>% 
+        broom::tidy() %>% 
+        filter(!str_detect(term, 'code')) %>% 
+        granatlib::prtbl('Becsült koeffieciensek a random hatás modellben')
+    }
+  } else {
+    x$pooling %>% 
+      broom::tidy() %>% 
+      filter(!str_detect(term, 'code')) %>% 
+      granatlib::prtbl('Becsült koeffieciensek a random hatás modellben')
   }
+  
+})
 
 ```
 
 ```{r}
-dat_sentiment %>% 
-  mutate(
-    words = SnowballC::wordStem(words)
-  ) %>% 
-  filter(!str_detect(words, '\\d')) %>% 
-  anti_join(data.frame(words = c(stopwords::stopwords(), "also", "can"))) %>% 
-  group_by(country, words) %>% 
-  summarise(n = n()) %>% 
-  {split(., .$country, drop = TRUE)} %>% 
-  lapply(function(x) mutate(x, n = n/sum(x$n))) %>% 
-  reduce(rbind) %>% 
-  pivot_wider(names_from = country, values_from = n, values_fill = 0) %>% 
-  select(-words) %>% 
-  cor() %>% 
-  data.frame() %>% 
-  rownames_to_column(var = 'x') %>% 
-  pivot_longer(-1, names_to = 'y') %>% 
-  filter(x < y) %>% 
-  ggplot(aes(x, y, fill = value)) +
-  geom_tile(color = 'black') +
-  scale_fill_viridis_b(direction = -1) +
-  labs(x = NULL, y = NULL, fill = 'Correlation coefficient') + 
-  theme_minimal()
+# m_panels %>% 
+#   lapply(function(x) {
+m_panels[[9]]$OLS %>% 
+  broom::augment(new.data = dat_plm) %>% 
+  ggplot() +
+  aes(t, code, fill = .sigma) +
+  geom_tile()
+# }) %>% 
 
+```
+
+```{r}
+dat_covid %>% 
+  filter(code %in% (dat_sentiment_daily %>% 
+                      pull(country) %>% 
+                      unique()) &
+           date < lubridate::ymd("2021-02-01") &
+           date > lubridate::ymd("2019-12-31")
+  ) %>% 
+  group_by(date) %>% 
+  summarise(new_cases = sum(new_cases, na.rm = T)) %>% 
+  ungroup() %>% 
+  ggplot() +
+  aes(date, zoo::rollmean(new_cases, 7, na.pad=TRUE), color = "Napi új esetek száma") +
+  geom_hline(yintercept = 0) +
+  geom_line() +
+  geom_line(data = (dat_sentiment_daily %>% 
+                      group_by(date) %>% 
+                      summarise(value = sum(n)) %>% 
+                      merge(
+                        dat %>% 
+                          group_by(date) %>% # TODO need to change to TRUE value
+                          summarise(n_articles = n())
+                      )
+  ), mapping = aes(date, zoo::rollmean(value, 7, na.pad=TRUE), 
+                   color = "Érzelmi szavak száma naponta")) + 
+  scale_y_continuous(
+    name = "Napi új esetek száma",
+    sec.axis = sec_axis(~.*7, name="Érzelmi szavak száma naponta")
+  ) + 
+  labs(x = NULL, color = NULL) + 
+  theme(
+    legend.position = 'bottom'
+  )
+
+```
+
+```{r}
+lapply(30:300, function(x) {
+  df <- dat_sentiment_daily %>% 
+    filter(country == 'HU') %>% 
+    select(date, sentiment) %>% 
+    merge(filter(dat_covid, code == 'HU'), all = T) %>% 
+    mutate(cases = lag(cases, 3)) %>% 
+    slice(x:(x + 29)) 
+  lm(formula = sentiment ~ cases, data = df) %>% 
+    coef() %>% 
+    .[2] %>% 
+    {tibble(date = df$date[15], beta = .)}
+}) %>% 
+  reduce(rbind) %>% 
+  ggplot(aes(date, beta)) + 
+  geom_line()
+
+```
+
+# Topic modell
+
+```{r}
+l_topic_model <- list()
+for (i in c(2:14, 16)) {
+  load(paste0('C:/rprojects/CoronaSentiment/topic_models/mod', i, '.RData'))
+  l_topic_model[[i-1]] <- mod
+}
+
+```
+
+```{r fig.cap='Topikok optimális számának meghatározása', fig.height=2.5}
+lapply(l_topic_model, function(mod) {
+  if (!is.null(mod)) {
+  logLik(mod)
+    
+  } else {
+    NA
+  }
+}) %>% 
+  reduce(c) %>% 
+  {tibble(k = seq_along(.) + 1, y = .)} %>% 
+  ggplot(aes(k, y)) +
+  geom_point() + 
+  labs(x = 'Topikok száma', y = 'Loglikelihood')
+
+```
+
+```{r}
+load(paste0('C:/rprojects/CoronaSentiment/topic_models/mod12.RData'))
+mod_topic <- mod
+```
+
+```{r}
+tidy(mod_topic, matrix = "beta") %>%
+  anti_join(rename(stop_words, term = word)) %>% 
+  group_by(topic) %>%
+  top_n(20, beta) %>%
+  ungroup() %>%
+  arrange(topic, -beta) %>%
+  mutate(term = reorder_within(term, beta, topic)) %>%
+  ggplot(aes(beta, term)) +
+  geom_vline(xintercept = 0) +
+  geom_col(show.legend = FALSE, color = 'black', fill = 'cyan4') +
+  facet_wrap(~ topic, scales = "free", ncol = 3) +
+  scale_y_reordered()
+```
+
+```{r}
+hc <-  mod_topic %>% 
+  tidy("beta") %>% 
+  pivot_wider(names_from = 'topic', values_from = 'beta') %>%
+  mutate(term = row_number()) %>% 
+  pivot_longer(-1) %>% 
+  pivot_wider(names_from = 'term', values_from = 'value') %>% 
+  mutate(name = paste('Topic', name)) %>% 
+  column_to_rownames(var = 'name') %>% 
+  scale() %>% 
+  {hclust(dist(.), method="ward")}
+  ggdendro::ggdendrogram(hc, rotate = TRUE, theme_dendro = F) +
+    labs(x = NULL, y = 'Height')
+```
+
+```{r}
+v <- seq(from = 1, to = nrow(dat), length.out = 10000) %/% 1
+dat_topics <- tibble(
+  date = date(),
+  country = character(),
+  topic_1 = numeric(),
+  topic_2 = numeric(),
+  topic_3 = numeric(),
+  topic_4 = numeric(),
+  topic_5 = numeric(),
+  topic_6 = numeric(),
+  topic_7 = numeric(),
+  topic_8 = numeric(),
+  topic_9 = numeric(),
+  topic_10 = numeric(),
+  topic_11 = numeric(),
+  topic_12 = numeric()
+)
+
+for (i in 1:(length(v) - 1)) {
+  dat_topics <- dat[v[i]:v[i + 1], ]  %>%
+  mutate(id = row_number()) %>% 
+  unnest_tokens('words', 'text') %>% 
+  count(id, words, sort = T) %>% 
+  cast_dfm(id, words, n) %>% 
+  {posterior(mod_topic, .)} %>% 
+  .$topics %>% 
+  data.frame() %>% 
+  {cbind(select(dat[v[i]:v[i + 1], ], date, country), .)} %>% 
+  rename_all(.funs = function(x) str_replace_all(x, 'X', 'topic_')) %>% 
+    {rbind(dat_topics, .)}
+}
+
+```
+
+# Országspecifikus
+
+```{r}
+dat_plm %>% 
+  filter(date >= ymd('2020-02-01')) %>% 
+  select(code, sentiment, cases, eco, t) %>% 
+  na.omit() %>% 
+  group_by(code) %>% 
+  group_map(~ lm(data = .x, formula = sentiment ~ . + t:cases))
+```
+
+```{r}
+dat_sentiment_daily %>% 
+  select(date, country, sentiment) %>% 
+  pivot_wider(names_from = country, values_from = sentiment) %>% 
+  arrange(date) %>% 
+  mutate(t = row_number())
+```
+
+
+```{r}
+mod_ind <- merge(dat_sentiment_daily, 
+                 mutate(dat_covid, 
+                      country = case_when(
+                        code== 'GB' ~ 'UK',
+                        code== 'GR' ~ 'EL',
+                        T ~ code
+                      )
+                 )) %>% 
+  transmute(date, country, sentiment, 
+            cases = ifelse(is.na(cases), 0, cases),
+            death = ifelse(is.na(death), 0, death),
+            t = as.numeric(difftime(date, ymd('2020-01-05')))
+              ) %>% 
+  na.omit() %>% 
+  select(-date) %>% 
+  group_by(country) %>% 
+  group_map(~ lm(data = .x, formula = sentiment ~ cases + cases:t) %>% 
+              broom::tidy(conf.int = T) %>% 
+              mutate(country = .x$country[1])
+            , .keep = T) %>% 
+  reduce(rbind)
+
+mod_ind %>% 
+  filter(!str_detect(term, 'Inter')) %>% 
+  ggplot() +
+  geom_vline(xintercept = 0) +
+  aes(color = p.value < .05) +
+  geom_errorbar(aes(xmin = conf.low, xmax = conf.high, y = country)) + 
+  geom_point(aes(x = estimate, y = country)) +
+  facet_wrap(~ term, nrow = 1, scales = 'free_x')
+  
+```
+
+```{r}
+mod_ind %>% 
+  select(estimate, country, term) %>% 
+  pivot_wider(names_from = term, values_from = estimate) %>% 
+  janitor::clean_names() %>% 
+  mutate(
+    type = case_when(
+      cases > 0 & cases_t < 0 ~ 'a',
+      cases < 0 & cases_t > 0 ~ 'b',
+      T ~ 'other'
+    )
+  )
+```
+
+```{r}
+merge(dat_sentiment_daily, 
+                 mutate(dat_covid, 
+                      country = case_when(
+                        code== 'GB' ~ 'UK',
+                        code== 'GR' ~ 'EL',
+                        T ~ code
+                      )
+                 )) %>% 
+  transmute(date, country, sentiment, 
+            cases = ifelse(is.na(cases), 0, cases),
+            death = ifelse(is.na(death), 0, death),
+            t = as.numeric(difftime(date, ymd('2020-01-05')))
+              ) %>% 
+  na.omit %>% 
+  mutate(cases = ifelse(cases < 0, 0, cases)) %>% 
+  ggplot() + 
+  geom_line(aes(date, cases),  color = 'cyan4') + 
+  geom_line(aes(date, sentiment*10),  color = 'red4') + 
+    scale_y_continuous(
+    name = "Napi új esetek száma",
+    sec.axis = sec_axis(~., name="Érzelmi szavak száma naponta")
+  ) + 
+  facet_wrap(~ country, scales = 'free_y')
+  
+```
+
+
+```{r}
+mod_ind %>% 
+  select(country, term, statistic) %>% 
+  pivot_wider(names_from = term, values_from = statistic) %>% 
+  select(-2) %>% 
+  column_to_rownames('country') %>%  
+  dist %>% 
+  hclust() %>% 
+  factoextra::fviz_dend(k=3)
+```
+
+```{r}
+load("C:/rprojects/CoronaSentiment/topics_bydat.RData")
+
+dat_topics %>% 
+  mutate(date = ym(str_sub(as.character(date), end = -4))) %>% 
+  group_by(date, country) %>% 
+  summarise_all(.funs = function(x)  mean(x, na.rm = T)) %>% 
+  ungroup() %>% 
+  group_by(date) %>% 
+  summarise_all(.funs = function(x)  mean(x, na.rm = T)) %>% 
+  ungroup() %>% 
+  select(-country) %>% 
+  pivot_longer(-1) %>% 
+  mutate(name = factor(name, levels = paste0('topic_', 1:12), ordered = T)) %>% 
+  ggplot() +
+  aes(date, value, fill = name) +
+  geom_col(color = 'black')
 ```
 
 
@@ -325,5 +651,5 @@ dat_sentiment %>%
 
 # Függelék: R kódok
 
-```{r ref.label=setdiff(knitr::all_labels(), c("setup", "theme", "grid")), eval=FALSE, echo=T, attr.source='.numberLines'}
+```{r ref.label=setdiff(knitr::all_labels(), c("setup", "theme")), eval=FALSE, echo=T, attr.source='.numberLines'}
 ```
